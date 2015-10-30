@@ -1,0 +1,53 @@
+{
+    "name": "brunch-with-foo",
+    "version": "0.1.0",
+    "description": "Boilerplate for Foo Projects",
+    "main": "index.js",
+    "directories": {
+        "test": "test"
+    },
+    "dependencies": {
+        "auto-reload-brunch": "^1.7.8",
+        "brunch": "^1.8.5",
+        "clean-css-brunch": "^1.7.2",
+        "coffee-script-brunch": "^1.8.3",
+        "coffeelint-brunch": "^1.7.1",
+        "css-brunch": "^1.7.0",
+        "handlebars-brunch": "^1.9.1",
+        "javascript-brunch": "^1.7.1",
+        "sass-brunch": "^1.9.1",
+        "uglify-js-brunch": "^1.7.8"
+    },
+    "devDependencies": {
+        "mocha": "^2.3.3",
+        "karma-mocha": "^0.2.0",
+        "karma-chrome-launcher": "^0.2.1",
+        "karma-coffee-preprocessor": "^0.3.0",
+        "karma-safari-launcher": "^0.1.1",
+        "karma": "^0.13.14",
+        "karma-firefox-launcher": "^0.1.6",
+        "karma-phantomjs-launcher": "^0.2.1"
+    },
+    "scripts": {
+        "test": "cake build:test",
+        "prestart": "bower install",
+        "start": "brunch watch -s",
+        "prebuild": "rm -R public",
+        "build": "brunch build -P"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/FooStudio/brunch-with-foo.git"
+    },
+    "keywords": [
+        "coffe-script",
+        "brunch-js",
+        "sass"
+    ],
+    "author": "Foo (Studio)",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/FooStudio/brunch-with-foo/issues"
+    },
+    "homepage": "https://github.com/FooStudio/brunch-with-foo#readme"
+}

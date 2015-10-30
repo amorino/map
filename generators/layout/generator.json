@@ -1,0 +1,11 @@
+{
+    "files": [{
+        "from": "layout.coffee.hbs",
+        "to": "app/views/layouts/{{name}}Layout.coffee"
+    }],
+
+    "dependencies": [{
+        "name": "view_test",
+        "params": "{{name}}"
+    }]
+}

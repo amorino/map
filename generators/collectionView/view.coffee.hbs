@@ -1,0 +1,7 @@
+AbstractCollectionView = require 'base/AbstractCollectionView'
+
+class {{#camelize}}{{name}}{{/camelize}}CollectionView extends AbstractCollectionView
+    className: '{{name}}'
+    template : require 'views/templates/{{name}}'
+
+module.exports = {{#camelize}}{{name}}{{/camelize}}CollectionView
