@@ -6,15 +6,28 @@ class ContentView extends AbstractItemView
     renderWidth: window.innerWidth
     renderHeight: window.innerHeight
     menuBarWidth: 120
-    positionX: 0
     velocityX: 0
+    velocityY: 0
     friction: 0.95
-    isDragging: false
+    dragging: false
+    positionX: 0
+    dragPositionX: 0
+    positionY: 0
+    dragPositionY: 0
+    rightBound: 0
+    leftBound: 0
+    topBound: 0
+    bottomBound: 0
+    zoom: 4
+    tilesWidth: 64
+    tilesHeight: 50
+    tilesSize: 16
 
     onRender:()=>
         @container = @.$el
         # For zoomed-in pixel art, we want crisp pixels instead of fuzziness
         PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST
+
         # @Tilemap.prototype = new PIXI.Container()
         # @Tilemap.prototype.constructor = @Tilemap()
         # Create the stage. This will be used to add sprites (or sprite containers) to the screen.
@@ -22,6 +35,7 @@ class ContentView extends AbstractItemView
         @stage.interactive = true
         # Create the renderer and add it to the page.
         # (autoDetectRenderer will choose hardware accelerated if possible)
+
         @renderer = PIXI.autoDetectRenderer(@renderWidth, @renderHeight)
         @container.append( @renderer.view)
         #document.body.appendChild(renderer.view);
@@ -32,41 +46,52 @@ class ContentView extends AbstractItemView
         loader.load(@onLoaded)
         # @texture = PIXI.Texture.fromImage './img/tiles.png'
         @renderer.view
+
     onLoaded:()=>
-        console.log 'loaded'
-        # @tilemap = new Tilemap 64, 50, @renderWidth, @renderHeight
-        # @tilemap.position.x = 0
-        # console.log @tilemap
-        # @stage.addChild @tilemap
-        # @menu = new Menu @menuBarWidth, @tilemap
-        # @stage.addChild @menu
-        # zoom in on the starting tile
-        # @tilemap.selectTile @tilemap.startLocation.x, @tilemap.startLocation.y
-        # @tilemap.zoomIn()
-        # @tilingSprite = new PIXI.extras.TilingSprite(@texture, @renderer.width, @renderer.height)
-        # @stage.addChild(@tilingSprite)
-
         @startTiledMap()
-
         # begin drawing
         @animate()
         return
+
     animate:()=>
-        # @tilingSprite.tilePosition.x += 1
-        # @tilingSprite.tilePosition.y += 1
+        @update()
+        @rend()
         @renderer.render @stage
         requestAnimationFrame(@animate)
         return
 
-    applyForce:(force)=>
+    applyForceX:(force)=>
         @velocityX += force
         return
 
+    applyForceY:(force)=>
+        @velocityY += force
+        return
+
+    rend:()=>
+        if @tilemap isnt undefined
+            @tilemap.position.x = Math.floor(@positionX)
+            @tilemap.position.y = Math.floor(@positionY)
+        return
+
+    update:()=>
+        @applyDragForceX()
+        @applyDragForceY()
+        @applyBoundForceX @rightBound, true
+        @applyBoundForceX @leftBound, false
+        @applyBoundForceY @topBound, true
+        @applyBoundForceY @bottomBound, false
+        @velocityX *= @friction
+        @velocityY *= @friction
+        @positionX += @velocityX
+        @positionY += @velocityY
+        return
+
     applyRightBoundForce:()=>
-        if @isDragging or @positionX < @rightBound
+        if @dragging or @positionX < @rightBound
             return
         # bouncing past bound
-        distance = @rightBound - (@positionX)
+        distance = @rightBound - ( @positionX )
         force = distance * 0.1
         # calculate resting position with this force
         restX = @positionX + (@velocityX + force) / (1 - @friction)
@@ -79,23 +104,67 @@ class ContentView extends AbstractItemView
         @applyForce force
         return
 
-    applyDragForce:()=>
-        if !@isDragging
+    applyBoundForceX:(bound, isForward) =>
+        isInside = if isForward then @positionX < bound else @positionX > bound
+        if @dragging or isInside
             return
-        @dragVelocity = @tilemap.position.x - @positionX
-        @dragForce = @dragVelocity - @velocityX
-        @applyForce @dragForce
+        # bouncing past bound
+        distance = bound - @positionX
+        force = distance * 0.1
+        restX = @positionX + (@velocityX + force) * @friction / (1 - @friction)
+        isRestOutside = if isForward then restX > bound else restX < bound
+        if isRestOutside
+            @applyForceX force
+            return
+        # bounce back
+        force = distance * 0.1 - (@velocityX)
+        @applyForceX force
+        return
+
+    applyBoundForceY:(bound, isForward) =>
+        isInside = if isForward then @positionY < bound else @positionY > bound
+        if @dragging or isInside
+            return
+        # bouncing past bound
+        distance = bound - @positionY
+        force = distance * 0.1
+        restX = @positionY + (@velocityY + force) * @friction / (1 - @friction)
+        isRestOutside = if isForward then restX > bound else restX < bound
+        if isRestOutside
+            @applyForceY force
+            return
+        # bounce back
+        force = distance * 0.1 - (@velocityY)
+        @applyForceY force
+        return
+
+    applyDragForceX:()=>
+        if !@dragging
+            return
+        @dragVelocityX = @dragPositionX - @positionX
+        @dragForceX = @dragVelocityX - @velocityX
+        @applyForceX @dragForceX
+        return
+
+    applyDragForceY:()=>
+        if !@dragging
+            return
+        @dragVelocityY = @dragPositionY - @positionY
+        @dragForceY = @dragVelocityY - @velocityY
+        @applyForceY @dragForceY
         return
 
 
     startTiledMap:()=>
         @tilemap = new PIXI.Container()
         # PIXI.Container.call(@tilemap)
+        @leftBound = window.innerWidth - (@tilesWidth * @tilesSize * @zoom)
+        @bottomBound = window.innerHeight - (@tilesHeight * @tilesSize * @zoom)
         @tilemap.interactive = true
-        @tilemap.tilesWidth = 64
-        @tilemap.tilesHeight = 50
-        @tilemap.tileSize = 16
-        @tilemap.zoom = 2
+        @tilemap.tilesWidth = @tilesWidth
+        @tilemap.tilesHeight = @tilesHeight
+        @tilemap.tileSize = @tilesSize
+        @tilemap.zoom = @zoom
         @tilemap.scale.x = @tilemap.scale.y = @tilemap.zoom
         @tilemap.startLocation =
             x: 0
@@ -121,7 +190,7 @@ class ContentView extends AbstractItemView
         # @tilemap.addChild @selectedGraphics
         # @tilemap.addChild @mouseoverGraphics
         @stage.addChild @tilemap
-        @zoomIn()
+        # @zoomIn()
 
         @stage.mousedown = (event) =>
             # @dragging = true
@@ -130,33 +199,40 @@ class ContentView extends AbstractItemView
             # @selectTile Math.floor(@tilemap.mousePressPoint[0] / (@tilemap.tileSize * @tilemap.zoom)), Math.floor(@tilemap.mousePressPoint[1] / (@tilemap.tileSize * @tilemap.zoom))
             @dragging = true
             @mousedownX = event.data.originalEvent.pageX
-            console.log @mousedownX
+            @mousedownY = event.data.originalEvent.pageY
             @dragStartPositionX = @positionX
+            @dragStartPositionY = @positionY
             @setDragPosition event
             return
 
         @stage.mouseupoutside = @stage.mouseup = (event) =>
-            # @dragging = false
-            return
+            @dragging = false
+        #     return
 
         @stage.mousemove = (event) =>
-            # if @dragging
+            if @dragging
+                moveX = event.data.originalEvent.pageX - @mousedownX
+                @dragPositionX = @dragStartPositionX + moveX
+                moveY = event.data.originalEvent.pageY - @mousedownY
+                @dragPositionY = @dragStartPositionY + moveY
             #     position = event.data.getLocalPosition(@tilemap.parent)
             #     @tilemap.position.x = position.x - (@tilemap.mousePressPoint[0])
             #     @tilemap.position.y = position.y - (@tilemap.mousePressPoint[1])
             #     @constrainTilemap()
-            return
+            # return
 
     setDragPosition:(event)->
-        moveX = event.pageX - @mousedownX
+        # console.log event
+        moveX = event.data.originalEvent.pageX - @mousedownX
+        moveY = event.data.originalEvent.pageY - @mousedownY
+        # console.log moveX
         @dragPositionX = @dragStartPositionX + moveX
+        @dragPositionY = @dragStartPositionY + moveY
         # event.preventDefault()
         return
 
     onMouseup:()->
         @dragging = false
-        window.removeEventListener 'mousemove', setDragPosition
-        window.removeEventListener 'mouseup', onMouseup
         return
 
     addTile:(x, y, terrain)=>
