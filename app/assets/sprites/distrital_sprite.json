@@ -1,0 +1,21 @@
+{"frames": [
+
+{
+	"filename": "distrital.jpg",
+	"frame": {"x":1,"y":1,"w":10050,"h":4519},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":10050,"h":4519},
+	"sourceSize": {"w":10050,"h":4519},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "distrital_sprite-0.jpg",
+	"format": "RGB888",
+	"size": {"w":10052,"h":4521},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:9e03e503e745c53b8211fdeb14e55186:02c64d8e83caa5d52775bff134221056:0811d2a9f746fdafa9afef1d75b8a40e$"
+}
+}

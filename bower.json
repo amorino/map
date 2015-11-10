@@ -21,7 +21,9 @@
     "bourbon": "^4.2.1",
     "fastclick": "latest",
     "howler.js": "~1.1.28",
-    "pixi.js": "~3.0.8"
+    "pixi.js": "~3.0.8",
+    "backbone.radio": "1.0.2",
+    "hammerjs": "latest"
   },
   "overrides": {
     "backbone.marionette": {

@@ -45,7 +45,7 @@ class App extends Marionette.Application
     resize:=>
         @width = window.innerWidth
         @height = window.innerHeight
-
+        @.vent.trigger 'renderer:resize'
         null
 
     objectComplete: =>
@@ -63,6 +63,7 @@ class App extends Marionette.Application
         @share = new Share
         @sections = new MainRouter
         @breakPoints = new Breakpoint
+        @vent = Backbone.Radio.channel("global")
 
         @rootView = new Layout
         @rootView.render()

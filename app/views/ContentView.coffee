@@ -8,28 +8,31 @@ class ContentView extends AbstractItemView
     menuBarWidth: 120
     velocityX: 0
     velocityY: 0
-    friction: 0.95
+    friction: 0.94
     dragging: false
     positionX: 0
     dragPositionX: 0
     positionY: 0
     dragPositionY: 0
-    rightBound: 0
+    rightBound: -200
     leftBound: 0
-    topBound: 0
+    topBound: -200
     bottomBound: 0
-    zoom: 4
-    tilesWidth: 64
-    tilesHeight: 50
-    tilesSize: 16
+    zoom: 0.5
+    boundFactor: 200
+    # tilesWidth: 64
+    # tilesHeight: 50
+    # tilesSize: 16
+    tilesWidth: 1
+    tilesHeight: 1
+    tilesSize: 10052
+    tilesH: 4521
 
     onRender:()=>
+        App.vent.on "renderer:resize", @resize
         @container = @.$el
         # For zoomed-in pixel art, we want crisp pixels instead of fuzziness
-        PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST
-
-        # @Tilemap.prototype = new PIXI.Container()
-        # @Tilemap.prototype.constructor = @Tilemap()
+        # PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST
         # Create the stage. This will be used to add sprites (or sprite containers) to the screen.
         @stage = new PIXI.Container()
         @stage.interactive = true
@@ -40,9 +43,9 @@ class ContentView extends AbstractItemView
         @container.append( @renderer.view)
         #document.body.appendChild(renderer.view);
         # Set up the asset loader for sprite images with the .json data and a callback
-        tiles = ['./img/tiles.json']
+        tiles = ['./sprites/distrital_sprite.json']
         loader = PIXI.loader
-        loader.add 'tilesjson', './img/tiles.json'
+        loader.add 'tilesjson', './sprites/distrital_sprite.json'
         loader.load(@onLoaded)
         # @texture = PIXI.Texture.fromImage './img/tiles.png'
         @renderer.view
@@ -52,6 +55,16 @@ class ContentView extends AbstractItemView
         # begin drawing
         @animate()
         return
+
+    resize:()=>
+        console.log 'resize'
+        @renderWidth = window.innerWidth
+        @renderHeight = window.innerHeight
+        #this part resizes the canvas but keeps ratio the same
+        @renderer.view.style.width = @renderWidth + 'px'
+        @renderer.view.style.height = @renderHeight + 'px'
+        #this part adjusts the ratio:
+        @renderer.resize @renderWidth, @renderHeight
 
     animate:()=>
         @update()
@@ -157,9 +170,11 @@ class ContentView extends AbstractItemView
 
     startTiledMap:()=>
         @tilemap = new PIXI.Container()
-        # PIXI.Container.call(@tilemap)
-        @leftBound = window.innerWidth - (@tilesWidth * @tilesSize * @zoom)
-        @bottomBound = window.innerHeight - (@tilesHeight * @tilesSize * @zoom)
+        rightBound =  -(@boundFactor * @zoom)
+        topBound =  -(@boundFactor * @zoom)
+        @leftBound = window.innerWidth - (@tilesWidth * @tilesSize * @zoom) + (@boundFactor * @zoom)
+        # @bottomBound = window.innerHeight - (@tilesHeight * @tilesSize * @zoom) + 200
+        @bottomBound = window.innerHeight - (@tilesHeight * @tilesH * @zoom) + (@boundFactor * @zoom)
         @tilemap.interactive = true
         @tilemap.tilesWidth = @tilesWidth
         @tilemap.tilesHeight = @tilesHeight
@@ -187,8 +202,6 @@ class ContentView extends AbstractItemView
 
         @tilemap.selectedGraphics = new PIXI.Graphics
         @tilemap.mouseoverGraphics = new PIXI.Graphics
-        # @tilemap.addChild @selectedGraphics
-        # @tilemap.addChild @mouseoverGraphics
         @stage.addChild @tilemap
         # @zoomIn()
 
@@ -215,19 +228,21 @@ class ContentView extends AbstractItemView
                 @dragPositionX = @dragStartPositionX + moveX
                 moveY = event.data.originalEvent.pageY - @mousedownY
                 @dragPositionY = @dragStartPositionY + moveY
+                if @dragPositionX > 0 or @dragPositionX < @leftBound - (@boundFactor * @zoom) or @dragPositionY > 0 or @dragPositionY < @bottomBound - (@boundFactor * @zoom)
+                    @dragging = false
             #     position = event.data.getLocalPosition(@tilemap.parent)
             #     @tilemap.position.x = position.x - (@tilemap.mousePressPoint[0])
             #     @tilemap.position.y = position.y - (@tilemap.mousePressPoint[1])
             #     @constrainTilemap()
-            # return
+            return
 
-    setDragPosition:(event)->
+    setDragPosition:(event)=>
         # console.log event
         moveX = event.data.originalEvent.pageX - @mousedownX
         moveY = event.data.originalEvent.pageY - @mousedownY
-        # console.log moveX
         @dragPositionX = @dragStartPositionX + moveX
         @dragPositionY = @dragStartPositionY + moveY
+        # console.log @dragPositionX, @dragPositionY
         # event.preventDefault()
         return
 
@@ -251,19 +266,18 @@ class ContentView extends AbstractItemView
     getTile:(x, y)=>
         @tilemap.getChildAt x * @tilemap.tilesHeight + y
     generateMap:()=>
-        # fill with ocean
         i = 0
         o = 0
-        while i < @tilemap.tilesWidth
-            currentRow = []
-            j = 0
-            while j < @tilemap.tilesHeight
-                o = 0 if o is 10
-                @addTile i, j, o
-                j++
-            o++
-            ++i
-        # spawn some landmasses
+        @addTile 0, 0, 0
+        # while i < @tilemap.tilesWidth
+        #     currentRow = []
+        #     j = 0
+        #     while j < @tilemap.tilesHeight
+        #         o = 0 if o is 10
+        #         @addTile i, j, o
+        #         j++
+        #     o++
+        #     ++i
         # j = 0
         # while j < 25
         #     # number of landmasses
